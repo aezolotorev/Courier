@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "npd7mhbdhhs=",
+  "success": true,
+  "projectFilePath": "E:\\Courier\\GameServerCourier\\GameServerCourier\\GameServerCourier.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\PC\\.nuget\\packages\\newtonsoft.json\\13.0.4-beta1\\newtonsoft.json.13.0.4-beta1.nupkg.sha512"
+  ],
+  "logs": []
+}

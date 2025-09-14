@@ -1,0 +1,12 @@
+{
+  "Id": "f5d1f100-81c6-4e99-8bb1-adf339d57d59",
+  "Username": "Courier",
+  "UdpEndpoint": null,
+  "X": 0,
+  "Y": 0,
+  "Z": 0,
+  "Yaw": 0,
+  "Money": 100,
+  "CurrentOrderId": null,
+  "DeliveriesCompleted": 0
+}

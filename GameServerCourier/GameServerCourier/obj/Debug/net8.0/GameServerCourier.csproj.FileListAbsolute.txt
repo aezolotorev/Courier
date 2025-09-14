@@ -1,0 +1,17 @@
+E:\Courier\GameServerCourier\GameServerCourier\bin\Debug\net8.0\GameServerCourier.exe
+E:\Courier\GameServerCourier\GameServerCourier\bin\Debug\net8.0\GameServerCourier.deps.json
+E:\Courier\GameServerCourier\GameServerCourier\bin\Debug\net8.0\GameServerCourier.runtimeconfig.json
+E:\Courier\GameServerCourier\GameServerCourier\bin\Debug\net8.0\GameServerCourier.dll
+E:\Courier\GameServerCourier\GameServerCourier\bin\Debug\net8.0\GameServerCourier.pdb
+E:\Courier\GameServerCourier\GameServerCourier\obj\Debug\net8.0\GameServerCourier.GeneratedMSBuildEditorConfig.editorconfig
+E:\Courier\GameServerCourier\GameServerCourier\obj\Debug\net8.0\GameServerCourier.AssemblyInfoInputs.cache
+E:\Courier\GameServerCourier\GameServerCourier\obj\Debug\net8.0\GameServerCourier.AssemblyInfo.cs
+E:\Courier\GameServerCourier\GameServerCourier\obj\Debug\net8.0\GameServerCourier.csproj.CoreCompileInputs.cache
+E:\Courier\GameServerCourier\GameServerCourier\obj\Debug\net8.0\GameServerCourier.dll
+E:\Courier\GameServerCourier\GameServerCourier\obj\Debug\net8.0\refint\GameServerCourier.dll
+E:\Courier\GameServerCourier\GameServerCourier\obj\Debug\net8.0\GameServerCourier.pdb
+E:\Courier\GameServerCourier\GameServerCourier\obj\Debug\net8.0\GameServerCourier.genruntimeconfig.cache
+E:\Courier\GameServerCourier\GameServerCourier\obj\Debug\net8.0\ref\GameServerCourier.dll
+E:\Courier\GameServerCourier\GameServerCourier\bin\Debug\net8.0\Newtonsoft.Json.dll
+E:\Courier\GameServerCourier\GameServerCourier\obj\Debug\net8.0\GameServerCourier.csproj.AssemblyReference.cache
+E:\Courier\GameServerCourier\GameServerCourier\obj\Debug\net8.0\GameServ.F25D1719.Up2Date
