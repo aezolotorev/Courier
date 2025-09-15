@@ -1,5 +1,6 @@
 public class PlayerUpdate
 {
+    public string MessageType { get; set; } = "PositionUpdate"; // или "NewPlayer"
     public string PlayerId { get; set; } = "";
     public string Username { get; set; } = "";
     public float X { get; set; }

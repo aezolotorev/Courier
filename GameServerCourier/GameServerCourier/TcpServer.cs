@@ -86,7 +86,7 @@ public class TcpServer
                 await SendActiveOrdersToPlayerViaTcp(playerId, stream);
 
                 // ✅ Рассылаем нового игрока всем остальным
-                BroadcastNewPlayer(player);
+                await BroadcastNewPlayerAsync(player);
 
                 // ✅ Отправляем новому игроку всех остальных игроков
                 SendAllPlayersToNewPlayer(playerId);
@@ -163,7 +163,44 @@ public class TcpServer
         Console.WriteLine($"[TCP] ✅ Отправлено {activeOrders.Length} заказов игроку {playerId} по TCP");
     }
 
-    private void BroadcastNewPlayer(Player newPlayer)
+    private async Task BroadcastNewPlayerAsync(Player newPlayer)
+    {
+        var playerUpdate = new PlayerUpdate
+        {
+            MessageType = "NewPlayer",
+            PlayerId = newPlayer.Id,
+            Username = newPlayer.Username,
+            X = newPlayer.X,
+            Y = newPlayer.Y,
+            Z = newPlayer.Z,
+            Yaw = newPlayer.Yaw
+        };
+        var updates = new[] { playerUpdate };
+        var json = JsonConvert.SerializeObject(updates);
+        var data = Encoding.UTF8.GetBytes(json);
+        var lengthBytes = BitConverter.GetBytes(data.Length);
+        
+        foreach (var player in PlayerManager.GetAllPlayers())
+        {
+            if (player.Id == newPlayer.Id) continue;
+
+            
+            if (player.TcpStream == null || !player.TcpStream.CanWrite) continue;
+
+            try
+            {
+                await player.TcpStream.WriteAsync(lengthBytes, 0, lengthBytes.Length);
+                await player.TcpStream.WriteAsync(data, 0, data.Length);
+                Console.WriteLine($"[TCP] ✅ Игрок {newPlayer.Username} ({newPlayer.Id}) подключился — уведомляем игрока {player.Username} ({player.Id})");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[TCP] ❌ Ошибка отправки игроку {player.Id}: {ex.Message}");
+            }
+        }
+    }
+
+    /*private void BroadcastNewPlayer(Player newPlayer)
     {
         var playerUpdate = new PlayerUpdate
         {
@@ -184,7 +221,7 @@ public class TcpServer
 
             _ = _udpServer.SendToEndpoint(data, player.UdpEndpoint);
         }
-    }
+    }*/
 
     private void SendAllPlayersToNewPlayer(string newPlayerId)
     {
