@@ -1133,6 +1133,7 @@ MonoBehaviour:
   myOrdersButton: {fileID: 1497483076}
   allOrdersButton: {fileID: 49964111}
   freeOrdersButton: {fileID: 1118962285}
+  infoText: {fileID: 521174382}
   CurrentList: 0
 --- !u!4 &1021374585
 Transform:
