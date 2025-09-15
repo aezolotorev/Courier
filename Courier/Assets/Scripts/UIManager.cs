@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.UI; 
@@ -28,6 +29,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Button myOrdersButton;
     [SerializeField] private Button allOrdersButton;
     [SerializeField] private Button freeOrdersButton;
+
+    [SerializeField] private Text infoText;
     public enum TypeList
     {
         All,
@@ -49,11 +52,25 @@ public class UIManager : MonoBehaviour
             return;
         }
     }
-    
- 
+
+
+    private void Start()
+    {
+        _controls = InputManager.Instance.Controls;
+        _controls.Player.OpenPhone.performed += ctx => TogglePhone();
+        myOrdersButton.onClick.AddListener(() => { CurrentList = TypeList.My; UpdateCurrentList(); });
+        freeOrdersButton.onClick.AddListener(() => { CurrentList = TypeList.Free; UpdateCurrentList(); });
+        allOrdersButton.onClick.AddListener(() => { CurrentList = TypeList.All; UpdateCurrentList(); });
+        NetworkManager.Instance.newPlayerConnected += InformAboutNewPlayer;
+        if (phonePanel != null) phonePanel.SetActive(false);
+        UpdateNotificationBadge();
+        isOpen = phonePanel.activeSelf;
+    }
 
     private void OnEnable() => _controls?.Enable();
+
     private void OnDisable() => _controls?.Disable();
+
     private void OnDestroy()
     {
         foreach (var item in _ordersItems)
@@ -64,18 +81,21 @@ public class UIManager : MonoBehaviour
         _ordersItems.Clear();
     }
 
-    private void Start()
+
+    private Coroutine informCor;
+    private void InformAboutNewPlayer(string PlayerName)
     {
-        _controls = InputManager.Instance.Controls;
-        _controls.Player.OpenPhone.performed += ctx => TogglePhone();
-        myOrdersButton.onClick.AddListener(() => { CurrentList = TypeList.My; UpdateCurrentList(); });
-        freeOrdersButton.onClick.AddListener(() => { CurrentList = TypeList.Free; UpdateCurrentList(); });
-        allOrdersButton.onClick.AddListener(() => { CurrentList = TypeList.All; UpdateCurrentList(); });
-        if (phonePanel != null) phonePanel.SetActive(false);
-        UpdateNotificationBadge();
-        isOpen = phonePanel.activeSelf;
+        if(informCor!=null) StopCoroutine(informCor);
+        informCor = StartCoroutine(InformerCorTimer());
+        infoText.text = $"{PlayerName} присоединился к игре";
     }
 
+    private IEnumerator InformerCorTimer()
+    {
+        infoText.gameObject.SetActive(true);
+        yield return new WaitForSeconds(10f);
+        infoText.gameObject.SetActive(false);
+    }
     private void UpdateCurrentList()
     {
         foreach (var item in _ordersItems)

@@ -11,6 +11,9 @@ using UnityEngine;
 
 public class NetworkManager : MonoBehaviour
 {
+    public Action<string> newPlayerConnected;
+    public Action<string> playerDisconnected;
+    
 
     public static NetworkManager Instance;
 
@@ -18,7 +21,8 @@ public class NetworkManager : MonoBehaviour
     public int TcpPort = 7777;
     public int UdpPort = 7778;
 
-
+    private TcpMessageHandler _tcpMessageHandler;
+    private UdpMessageHandler _udpMessageHandler;
     private TcpClient _tcpClient;
     private NetworkStream _tcpStream;
     private UdpClient _udpClient;
@@ -28,7 +32,8 @@ public class NetworkManager : MonoBehaviour
     public string PlayerId { get; private set; } = "";
     public string Username = "Courier";
 
-    private readonly Dictionary<string, GameObject> _remotePlayers = new();
+    private readonly Dictionary<string, RemotePlayer> _remotePlayers = new();
+    public Dictionary<string, RemotePlayer> RemotePlayers => _remotePlayers;
     private bool _isInitialized = false;
      private void Awake()
     {
@@ -56,7 +61,9 @@ public class NetworkManager : MonoBehaviour
     public async void ConnectToServer()
     {
         _cancellationTokenSource = new CancellationTokenSource();
-
+        _tcpMessageHandler = new TcpMessageHandler(this);
+        _udpMessageHandler = new UdpMessageHandler(this);
+        
         try
         {
             _tcpClient = new TcpClient();
@@ -255,15 +262,7 @@ public class NetworkManager : MonoBehaviour
                     continue;
                 }
 
-                var orderUpdates = JsonConvert.DeserializeObject<OrderUpdate[]>(json);
-                if (orderUpdates == null) continue;
-
-                foreach (var update in orderUpdates)
-                {
-                    UIManager.Instance?.HandleOrderUpdate(update);
-                }
-
-                Debug.Log($"[TCP] Получено {orderUpdates.Length} обновлений заказов");
+                _tcpMessageHandler.HandleMessage(json);
             }
             catch (OperationCanceledException)
             {
@@ -291,24 +290,7 @@ public class NetworkManager : MonoBehaviour
                 UdpReceiveResult result = await _udpClient.ReceiveAsync();
                 string json = Encoding.UTF8.GetString(result.Buffer);
 
-                if (json.Contains("\"PlayerId\"") && json.Contains("\"Yaw\""))
-                {
-                    var playerUpdate = JsonConvert.DeserializeObject<PlayerUpdate>(json);
-                    if (playerUpdate != null && playerUpdate.PlayerId != PlayerId)
-                    {
-                        HandleRemotePlayerUpdate(playerUpdate);
-                    }
-                }
-
-                if (json.Contains("\"Order\""))
-                {
-                    Debug.Log($"[UDP] Получен JSON заказа: {json} обновление по udp");
-                    var orderUpdate = JsonConvert.DeserializeObject<OrderUpdate>(json);
-                    if (orderUpdate != null)
-                    {
-                        UIManager.Instance?.HandleOrderUpdate(orderUpdate);
-                    }
-                }
+                _udpMessageHandler.HandleMessage(json);
             }
             catch (OperationCanceledException)
             {
@@ -343,28 +325,10 @@ public class NetworkManager : MonoBehaviour
         byte[] data = Encoding.UTF8.GetBytes(json);
         await _udpClient.SendAsync(data, data.Length, _udpServerEP);
     }
+    
+   
 
-    private void HandleRemotePlayerUpdate(PlayerUpdate update)
-    {
-        if (!_remotePlayers.TryGetValue(update.PlayerId, out var playerObj))
-        {
-            var playerPrefab = Resources.Load<GameObject>("RemotePlayer");
-            if (playerPrefab != null)
-            {
-                playerObj = Instantiate(playerPrefab, new Vector3(update.X, update.Y, update.Z), Quaternion.identity);
-                playerObj.name = "Player_" + update.Username;
-                var remoteComp = playerObj.GetComponent<RemotePlayer>();
-                if (remoteComp != null)
-                {
-                    remoteComp.PlayerId = update.PlayerId;
-                    remoteComp.Username = update.Username;
-                }
-                _remotePlayers[update.PlayerId] = playerObj;
-            }
-        }
-
-        playerObj?.GetComponent<RemotePlayer>()?.UpdateState(update.X, update.Y, update.Z, update.Yaw);
-    }
+    
 
     private void SpawnPlayer()
     {
@@ -422,7 +386,6 @@ public class NetworkManager : MonoBehaviour
     {
         if (_cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested)
         {
-            Debug.Log("[Network] Отключение от сервера...");
             _cancellationTokenSource.Cancel();
         }
 
@@ -430,7 +393,11 @@ public class NetworkManager : MonoBehaviour
         _udpClient?.Close();
 
         PlayerId = "";
-        Debug.Log("[Network] Отключено.");
+        if (_tcpStream == null || !_tcpClient.Connected) return;
+
+        string command = $"EXIT";
+        byte[] data = Encoding.UTF8.GetBytes(command);
+        _tcpStream.WriteAsync(data, 0, data.Length);
     }
 
     private void OnApplicationQuit() => DisconnectFromServer();
