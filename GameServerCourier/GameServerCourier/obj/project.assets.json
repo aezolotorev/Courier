@@ -60,11 +60,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\Courier\\GameServerCourier\\GameServerCourier\\GameServerCourier.csproj",
+      "projectUniqueName": "E:\\Fork\\Courier\\GameServerCourier\\GameServerCourier\\GameServerCourier.csproj",
       "projectName": "GameServerCourier",
-      "projectPath": "E:\\Courier\\GameServerCourier\\GameServerCourier\\GameServerCourier.csproj",
+      "projectPath": "E:\\Fork\\Courier\\GameServerCourier\\GameServerCourier\\GameServerCourier.csproj",
       "packagesPath": "C:\\Users\\PC\\.nuget\\packages\\",
-      "outputPath": "E:\\Courier\\GameServerCourier\\GameServerCourier\\obj\\",
+      "outputPath": "E:\\Fork\\Courier\\GameServerCourier\\GameServerCourier\\obj\\",
       "projectStyle": "PackageReference",
       "UsingMicrosoftNETSdk": false,
       "configFilePaths": [

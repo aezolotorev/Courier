@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Sockets;
 
 public class Player
 {
@@ -12,4 +13,5 @@ public class Player
     public int Money { get; set; } = 100; // стартовые деньги
     public string? CurrentOrderId { get; set; } // ID текущего заказа
     public int DeliveriesCompleted { get; set; } = 0;
+    public NetworkStream TcpStream { get; set; }
 }

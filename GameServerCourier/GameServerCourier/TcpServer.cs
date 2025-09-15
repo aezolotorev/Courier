@@ -21,11 +21,32 @@ public class TcpServer
         _listener = new TcpListener(IPAddress.Any, port);
         _listener.Start();
         Console.WriteLine($"[TCP] Сервер запущен на порту {port}");
-
+        _ = OrderGeneratorLoop();
         while (_running)
         {
             var client = await _listener.AcceptTcpClientAsync();
             _ = HandleClientAsync(client);
+        }
+    }
+    
+    private async Task OrderGeneratorLoop()
+    {
+        while (_running)
+        {
+            try
+            {
+                await Task.Delay(10000);
+                var newOrder = OrderManager.GenerateOrder();
+
+                var orderUpdate = new OrderUpdate { Order = newOrder, Type = "NEW" };
+                await BroadcastOrderUpdateToAll(orderUpdate);
+
+                Console.WriteLine($"[UDP] Создан новый заказ: {newOrder.Description} ({newOrder.Reward}$)");
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
         }
     }
 
@@ -49,7 +70,8 @@ public class TcpServer
                 var player = SaveManager.LoadPlayer(playerId) ?? new Player
                 {
                     Id = playerId,
-                    Username = username
+                    Username = username,
+                    TcpStream = stream,
                 };
 
                 PlayerManager.AddPlayer(player);
@@ -99,6 +121,29 @@ public class TcpServer
             Console.WriteLine($"[TCP] Клиент {playerId} отключён");
         }
     }
+    
+    public async Task BroadcastOrderUpdateToAll(OrderUpdate orderUpdate)
+    {
+        var updates = new[] { orderUpdate }; // ← массив из одного элемента!
+        var json = JsonConvert.SerializeObject(updates);
+        var data = Encoding.UTF8.GetBytes(json);
+        var lengthBytes = BitConverter.GetBytes(data.Length);
+
+        foreach (var player in PlayerManager.GetAllPlayers())
+        {
+            if (player.TcpStream == null || !player.TcpStream.CanWrite) continue;
+
+            try
+            {
+                await player.TcpStream.WriteAsync(lengthBytes, 0, lengthBytes.Length);
+                await player.TcpStream.WriteAsync(data, 0, data.Length);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[TCP] Ошибка отправки заказа игроку {player.Id}: {ex.Message}");
+            }
+        }
+    }
 
     private async Task SendActiveOrdersToPlayerViaTcp(string playerId, NetworkStream stream)
     {
@@ -111,11 +156,6 @@ public class TcpServer
         var data = Encoding.UTF8.GetBytes(json);
 
         var lengthBytes = BitConverter.GetBytes(data.Length);
-    
-        // 👇👇👇 ДОБАВЬ ЭТИ ЛОГИ
-        Console.WriteLine($"[TCP] DEBUG: Serialized {activeOrders.Length} orders, JSON length: {data.Length} bytes");
-        Console.WriteLine($"[TCP] DEBUG: First 4 length bytes (as int32): {BitConverter.ToInt32(lengthBytes, 0)}");
-        Console.WriteLine($"[TCP] DEBUG: JSON: {json}");
 
         await stream.WriteAsync(lengthBytes, 0, lengthBytes.Length);
         await stream.WriteAsync(data, 0, data.Length);
@@ -174,7 +214,7 @@ public class TcpServer
         }
     }
 
-    private void HandleCommand(string command, string playerId)
+    private async void HandleCommand(string command, string playerId)
     {
         if (command.StartsWith("TAKE_ORDER:"))
         {
@@ -187,7 +227,7 @@ public class TcpServer
                 if (changed)
                 {
                     Console.WriteLine($"[TCP] Игрок {playerId} взял заказ {orderId}");
-                    _udpServer.BroadcastOrderUpdate(new OrderUpdate { Order = order, Type = "UPDATE" });
+                    await BroadcastOrderUpdateToAll(new OrderUpdate { Order = order, Type = "UPDATE" });
                 }
             }
         }
@@ -210,7 +250,7 @@ public class TcpServer
                     if (changed)
                     {
                         Console.WriteLine($"[TCP] Игрок {playerId} подобрал заказ {orderId}");
-                        _udpServer.BroadcastOrderUpdate(new OrderUpdate { Order = order, Type = "UPDATE" });
+                        await BroadcastOrderUpdateToAll(new OrderUpdate { Order = order, Type = "UPDATE" });
                     }
                 }
             }
@@ -237,7 +277,7 @@ public class TcpServer
                         player.DeliveriesCompleted++;
                         OrderManager.CompleteOrder(orderId);
                         Console.WriteLine($"[TCP] Игрок {playerId} доставил заказ {orderId}");
-                        _udpServer.BroadcastOrderUpdate(new OrderUpdate { Order = order, Type = "UPDATE" });
+                        await BroadcastOrderUpdateToAll(new OrderUpdate { Order = order, Type = "UPDATE" });
                     }
                 }
             }

@@ -19,7 +19,7 @@ public class UdpServer
         _udp = new UdpClient(port);
         Console.WriteLine($"[UDP] Сервер запущен на порту {port}");
 
-        _ = OrderGeneratorLoop();
+        
 
         while (_running)
         {
@@ -104,7 +104,7 @@ public class UdpServer
         catch { /* Игнорируем ошибки */ }
     }
 
-    public async Task BroadcastOrderUpdate(OrderUpdate orderUpdate)
+    /*public async Task BroadcastOrderUpdate(OrderUpdate orderUpdate)
     {
         var json = JsonConvert.SerializeObject(orderUpdate);
         var data = Encoding.UTF8.GetBytes(json);
@@ -116,28 +116,9 @@ public class UdpServer
                 await SendToEndpoint(data, player.UdpEndpoint);
             }
         }
-    }
+    }*/
 
-    private async Task OrderGeneratorLoop()
-    {
-        while (_running)
-        {
-            try
-            {
-                await Task.Delay(10000, _cancellationTokenSource.Token);
-                var newOrder = OrderManager.GenerateOrder();
-
-                var orderUpdate = new OrderUpdate { Order = newOrder, Type = "NEW" };
-                await BroadcastOrderUpdate(orderUpdate);
-
-                Console.WriteLine($"[UDP] Создан новый заказ: {newOrder.Description} ({newOrder.Reward}$)");
-            }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
-        }
-    }
+    
 
     public void Stop()
     {
