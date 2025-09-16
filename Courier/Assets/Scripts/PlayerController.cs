@@ -3,9 +3,12 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
-   public float moveSpeed = 5f;
+    [SerializeField] private CharacterTypeController _characterTypeController;
+    private int _typeCharacter;
+    [SerializeField] private Animator animator;
+    public float moveSpeed = 5f;
     public float lookSensitivity = 2f;
-
+    private string _lastAnimState = "";
     
     private InputSystem_Actions _controls;
     private Vector2 _moveInput;
@@ -27,6 +30,12 @@ public class PlayerController : MonoBehaviour
         _controls.Player.Interact.performed += ctx => TryTakeOrder();
         _controls.Player.DeliverOrder.performed += ctx => TryDeliverOrder();
         _controls.Player.PickUpOrder.performed += ctx => TryPickupOrder();
+    }
+
+    public void SetCharacterType(int typeCharacter)
+    {
+        _typeCharacter = typeCharacter;
+        _characterTypeController.SetCharacterType(_typeCharacter);
     }
 
     private void OnEnable()
@@ -53,6 +62,10 @@ public class PlayerController : MonoBehaviour
         Vector3 move = new Vector3(_moveInput.x, 0, _moveInput.y) * moveSpeed * Time.deltaTime;
         transform.Translate(move, Space.Self);
 
+        float speed = move.magnitude;
+        
+        animator.SetFloat("Speed", speed);
+        
         // Поворот (по мыши)
         float mouseX = _lookInput.x * lookSensitivity;
         transform.Rotate(0, mouseX, 0);
@@ -62,6 +75,12 @@ public class PlayerController : MonoBehaviour
             lastSendTime = Time.time;
             Debug.Log("Отправляем позицию и поворот");
             NetworkManager.Instance.SendPositionAndRotation(transform.position, transform.eulerAngles.y);
+        }
+        string animState = speed >= 0.01 ? "Run" : "Idle";
+        if (animState != _lastAnimState)
+        {
+            _lastAnimState = animState;
+            NetworkManager.Instance.SendAnimationState(animState); // → TCP
         }
     }
     

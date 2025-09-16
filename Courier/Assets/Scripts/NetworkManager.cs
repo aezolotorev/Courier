@@ -76,12 +76,18 @@ public class NetworkManager : MonoBehaviour
             await _tcpStream.WriteAsync(loginBytes, 0, loginBytes.Length);
 
             // Читаем ID
-            string response = await ReadLineAsync(_tcpStream, _cancellationTokenSource.Token);
+            var lengthBytes = new byte[4];
+            await _tcpStream.ReadAsync(lengthBytes, 0, 4);
+            int length = BitConverter.ToInt32(lengthBytes, 0);
 
-            if (response.StartsWith("ID:"))
-            {
-                PlayerId = response["ID:".Length..].Trim();
-                Debug.Log($"[TCP] Получен ID: {PlayerId}");
+            var buffer = new byte[length];
+            await _tcpStream.ReadAsync(buffer, 0, length);
+            string json = Encoding.UTF8.GetString(buffer);
+            Debug.Log($"[TCP] Получен JSON: '{json}'");
+            var loginResponse = JsonConvert.DeserializeObject<LoginResponse>(json);
+            
+            PlayerId = loginResponse.PlayerId;
+            int typeCharacter = loginResponse.TypeCharacter;
 
                 // ✅ ДАЁМ СЕРВЕРУ ВРЕМЯ ОТПРАВИТЬ ЗАКАЗЫ
                 await UniTask.Delay(100); // Пауза 100 мс
@@ -98,8 +104,8 @@ public class NetworkManager : MonoBehaviour
                 _ = ListenUdpAsync(_cancellationTokenSource.Token);
 
                 _isInitialized = true;
-                SpawnPlayer();
-            }
+                SpawnPlayer(typeCharacter);
+            
         }
         catch (Exception ex)
         {
@@ -255,7 +261,8 @@ public class NetworkManager : MonoBehaviour
                 if (totalRead != length) break;
 
                 string json = Encoding.UTF8.GetString(buffer);
-
+                Debug.Log($"[TCP] 🔍 ПОЛНЫЙ СЫРОЙ JSON: '{json}'");
+                Debug.Log($"[TCP] 🔢 Длина: {json.Length}, Первый символ: ' {json[0]}'");
                 if (!_isInitialized)
                 {
                     Debug.LogWarning("[TCP] Получены данные до инициализации, игнорируем: " + json);
@@ -312,8 +319,9 @@ public class NetworkManager : MonoBehaviour
     {
         if (string.IsNullOrEmpty(PlayerId) || _udpClient == null || _udpServerEP == null) return;
 
-        var update = new PlayerUpdate
+        var update = new PlayerPositionUpdate()
         {
+            MessageType = "PlayerUpdate",
             PlayerId = PlayerId,
             X = position.x,
             Y = position.y,
@@ -330,12 +338,14 @@ public class NetworkManager : MonoBehaviour
 
     
 
-    private void SpawnPlayer()
+    private void SpawnPlayer(int typeCharacter)
     {
-        var playerPrefab = Resources.Load<GameObject>("Player");
+        var playerPrefab = Resources.Load<PlayerController>("Player");
         if (playerPrefab != null)
         {
-            Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
+            var player = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
+            
+            player.SetCharacterType(typeCharacter);
             Debug.Log("Игрок создан!");
         }
         else
@@ -351,10 +361,20 @@ public class NetworkManager : MonoBehaviour
     public async void TakeOrder(string orderId)
     {
         if (_tcpStream == null || !_tcpClient.Connected) return;
+        
+        var command = new CommandUpdate
+        {
+            TypeCommand = "TAKE_ORDER",
+            OrderId = orderId
+        };
 
-        string command = $"TAKE_ORDER:{orderId}";
-        byte[] data = Encoding.UTF8.GetBytes(command);
+        string json = JsonConvert.SerializeObject(command);
+        byte[] data = Encoding.UTF8.GetBytes(json);
+        var lengthBytes = BitConverter.GetBytes(data.Length);
+
+        await _tcpStream.WriteAsync(lengthBytes, 0, lengthBytes.Length);
         await _tcpStream.WriteAsync(data, 0, data.Length, _cancellationTokenSource.Token);
+
         Debug.Log($"[TCP] Отправлена команда TAKE_ORDER для заказа {orderId}");
     }
 
@@ -362,9 +382,19 @@ public class NetworkManager : MonoBehaviour
     {
         if (_tcpStream == null || !_tcpClient.Connected) return;
 
-        string command = $"PICKUP_ORDER:{orderId}";
-        byte[] data = Encoding.UTF8.GetBytes(command);
+        var command = new CommandUpdate
+        {
+            TypeCommand = "PICKUP_ORDER",
+            OrderId = orderId
+        };
+
+        string json = JsonConvert.SerializeObject(command);
+        byte[] data = Encoding.UTF8.GetBytes(json);
+        var lengthBytes = BitConverter.GetBytes(data.Length);
+
+        await _tcpStream.WriteAsync(lengthBytes, 0, lengthBytes.Length);
         await _tcpStream.WriteAsync(data, 0, data.Length, _cancellationTokenSource.Token);
+
         Debug.Log($"[TCP] Отправлена команда PICKUP_ORDER для заказа {orderId}");
     }
 
@@ -372,17 +402,46 @@ public class NetworkManager : MonoBehaviour
     {
         if (_tcpStream == null || !_tcpClient.Connected) return;
 
-        string command = $"DELIVER_ORDER:{orderId}";
-        byte[] data = Encoding.UTF8.GetBytes(command);
+        var command = new CommandUpdate
+        {
+            TypeCommand = "DELIVER_ORDER",
+            OrderId = orderId
+        };
+
+        string json = JsonConvert.SerializeObject(command);
+        byte[] data = Encoding.UTF8.GetBytes(json);
+        var lengthBytes = BitConverter.GetBytes(data.Length);
+
+        await _tcpStream.WriteAsync(lengthBytes, 0, lengthBytes.Length);
         await _tcpStream.WriteAsync(data, 0, data.Length, _cancellationTokenSource.Token);
+
         Debug.Log($"[TCP] Отправлена команда DELIVER_ORDER для заказа {orderId}");
+    }
+    
+    public async void SendAnimationState(string animState)
+    {
+        if (string.IsNullOrEmpty(PlayerId) || _tcpStream == null) return;
+
+        var update = new AnimationStateUpdate
+        {
+            PlayerId = PlayerId,
+            AnimationState = animState
+        };
+
+        var updates = new[] { update };
+        string json = JsonConvert.SerializeObject(updates);
+        byte[] data = Encoding.UTF8.GetBytes(json);
+        var lengthBytes = BitConverter.GetBytes(data.Length);
+
+        await _tcpStream.WriteAsync(lengthBytes, 0, lengthBytes.Length);
+        await _tcpStream.WriteAsync(data, 0, data.Length);
     }
 
     // ======================
     // Отключение
     // ======================
 
-    public void DisconnectFromServer()
+    public async void DisconnectFromServer()
     {
         if (_cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested)
         {
@@ -392,12 +451,23 @@ public class NetworkManager : MonoBehaviour
         _tcpClient?.Close();
         _udpClient?.Close();
 
-        PlayerId = "";
+        
         if (_tcpStream == null || !_tcpClient.Connected) return;
 
-        string command = $"EXIT";
-        byte[] data = Encoding.UTF8.GetBytes(command);
-        _tcpStream.WriteAsync(data, 0, data.Length);
+        var command = new CommandUpdate
+        {
+            TypeCommand = "EXIT"
+        };
+
+        string json = JsonConvert.SerializeObject(command);
+        byte[] data = Encoding.UTF8.GetBytes(json);
+        var lengthBytes = BitConverter.GetBytes(data.Length);
+
+        await _tcpStream.WriteAsync(lengthBytes, 0, lengthBytes.Length);
+        await _tcpStream.WriteAsync(data, 0, data.Length, _cancellationTokenSource.Token);
+
+        Debug.Log("[TCP] Отправлена команда EXIT");
+        PlayerId = "";
     }
 
     private void OnApplicationQuit() => DisconnectFromServer();

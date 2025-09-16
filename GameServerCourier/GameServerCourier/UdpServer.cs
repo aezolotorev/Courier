@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 public class UdpServer
 {
-     private UdpClient _udp;
+    private UdpClient _udp;
     private bool _running = true;
     private CancellationTokenSource _cancellationTokenSource;
 
@@ -28,22 +28,12 @@ public class UdpServer
                 UdpReceiveResult result = await _udp.ReceiveAsync(_cancellationTokenSource.Token);
                 string json = Encoding.UTF8.GetString(result.Buffer);
 
-                if (json.Contains("\"PlayerId\"") && json.Contains("\"Yaw\""))
+                if (json.Contains("\"MessageType\":\"PlayerUpdate\""))
                 {
-                    var playerUpdate = JsonConvert.DeserializeObject<PlayerUpdate>(json);
+                    var playerUpdate = JsonConvert.DeserializeObject<PlayerPositionUpdate>(json);
                     if (playerUpdate != null)
                     {
                         HandlePlayerUpdate(playerUpdate, result.RemoteEndPoint);
-                        continue;
-                    }
-                }
-
-                if (json.Contains("\"Order\""))
-                {
-                    var orderUpdate = JsonConvert.DeserializeObject<OrderUpdate>(json);
-                    if (orderUpdate != null)
-                    {
-                        HandleOrderUpdate(orderUpdate);
                         continue;
                     }
                 }
@@ -60,24 +50,21 @@ public class UdpServer
         }
     }
 
-    private void HandlePlayerUpdate(PlayerUpdate update, IPEndPoint remoteEP)
+    private void HandlePlayerUpdate(PlayerPositionUpdate update, IPEndPoint remoteEP)
     {
         var player = PlayerManager.GetPlayer(update.PlayerId);
         if (player == null) return;
 
         player.UdpEndpoint = remoteEP;
-        player.Username = update.Username;
         player.X = update.X;
         player.Y = update.Y;
         player.Z = update.Z;
         player.Yaw = update.Yaw;
 
-        Console.WriteLine($"[UDP] Обновлена позиция игрока {update.PlayerId}");
-
         BroadcastPlayerUpdate(update, update.PlayerId);
     }
 
-    private async Task BroadcastPlayerUpdate(PlayerUpdate update, string senderId)
+    private async Task BroadcastPlayerUpdate(PlayerPositionUpdate update, string senderId)
     {
         var json = JsonConvert.SerializeObject(update);
         var data = Encoding.UTF8.GetBytes(json);

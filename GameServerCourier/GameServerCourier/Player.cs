@@ -3,6 +3,7 @@ using System.Net.Sockets;
 
 public class Player
 {
+    public int TypeCharacter { get; set; }
     public string Id { get; set; } = "";
     public string Username { get; set; } = "Courier";
     public IPEndPoint? UdpEndpoint { get; set; }
@@ -14,4 +15,5 @@ public class Player
     public string? CurrentOrderId { get; set; } // ID текущего заказа
     public int DeliveriesCompleted { get; set; } = 0;
     public NetworkStream TcpStream { get; set; }
+    public string AnimationState { get; set; } = "Idle";
 }

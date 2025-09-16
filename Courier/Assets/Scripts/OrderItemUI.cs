@@ -58,6 +58,7 @@ public class OrderItemUI : MonoBehaviour
 
     private void TakeOrder()
     {
+        Debug.Log("TakeOrder for " + _order.Id);
         NetworkManager.Instance?.TakeOrder(_order.Id);
     }
 

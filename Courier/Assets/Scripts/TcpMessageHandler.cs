@@ -12,12 +12,13 @@ public class TcpMessageHandler
         {
             new NewPlayerMessageHandler(networkManager),
             new OrderMessageHandler(networkManager),
-           
+            new RemoteAnimationStatHandler(networkManager),
         };
     }
 
     public void HandleMessage(string json)
     {
+        Debug.Log($"[TCP] Получено сообщение: '{json}'"); // ← добавь это!
         foreach (var handler in _handlers)
         {
             if (handler.CanHandle(json))

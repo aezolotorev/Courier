@@ -12,9 +12,9 @@ public class UdpMessageHandler
 
     public void HandleMessage(string json)
     {
-        if (json.Contains("\"PlayerId\"") && json.Contains("\"Yaw\""))
+        if (json.Contains("\"MessageType\":\"PlayerUpdate\""))
         {
-            var playerUpdate = JsonConvert.DeserializeObject<PlayerUpdate>(json);
+            var playerUpdate = JsonConvert.DeserializeObject<PlayerPositionUpdate>(json);
             if (playerUpdate != null && playerUpdate.PlayerId != _networkManager.PlayerId)
             {
                 HandleRemotePlayerUpdate(playerUpdate);
@@ -22,25 +22,11 @@ public class UdpMessageHandler
         }
     }
     
-    private void HandleRemotePlayerUpdate(PlayerUpdate update)
+    private void HandleRemotePlayerUpdate(PlayerPositionUpdate update)
     {
-        if (!_networkManager.RemotePlayers.TryGetValue(update.PlayerId, out var playerRemote))
+        if (_networkManager.RemotePlayers.TryGetValue(update.PlayerId, out var playerRemote))
         {
-            var playerPrefab = Resources.Load<RemotePlayer>("RemotePlayer");
-            if (playerPrefab != null)
-            {
-                playerRemote = GameObject.Instantiate(playerPrefab, new Vector3(update.X, update.Y, update.Z), Quaternion.identity);
-                playerRemote.gameObject.name = "Player_" + update.Username;
-                
-                if (playerRemote != null)
-                {
-                    playerRemote.PlayerId = update.PlayerId;
-                    playerRemote.Username = update.Username;
-                }
-                _networkManager.RemotePlayers[update.PlayerId] = playerRemote;
-            }
+            playerRemote?.UpdateState(update.X, update.Y, update.Z, update.Yaw);
         }
-
-        playerRemote?.UpdateState(update.X, update.Y, update.Z, update.Yaw);
     }
 }
