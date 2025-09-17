@@ -60,6 +60,8 @@ public class UdpServer
         player.Y = update.Y;
         player.Z = update.Z;
         player.Yaw = update.Yaw;
+        
+        
 
         BroadcastPlayerUpdate(update, update.PlayerId);
     }

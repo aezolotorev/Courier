@@ -299,7 +299,9 @@ public class TcpServer
             X = playerNew.X,
             Y = playerNew.Y,
             Z = playerNew.Z,
-            Yaw = playerNew.Yaw
+            Yaw = playerNew.Yaw,
+            MoveX = 0,
+            MoveZ = 0,
         };
         var updatesNewPlayer = new[] { newPlayer };
         var json = JsonConvert.SerializeObject(updatesNewPlayer);

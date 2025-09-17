@@ -23,7 +23,7 @@ public class RemoteAnimationStatHandler : ITcpMessageHandler
         if (_networkManager.RemotePlayers.ContainsKey(update.PlayerId))
         {
             Debug.Log($"[TCP] Обновление состояния анимации для игрока {update.PlayerId}: {update.AnimationState})");
-            _networkManager.RemotePlayers[update.PlayerId].RemoteAnimation.SetAnimationState(update.AnimationState);
+            _networkManager.RemotePlayers[update.PlayerId].RemoteCharacterAnimationCointroller.SetAnimationState(update.AnimationState);
         }
     }
 }

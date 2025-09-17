@@ -26,7 +26,7 @@ public class UdpMessageHandler
     {
         if (_networkManager.RemotePlayers.TryGetValue(update.PlayerId, out var playerRemote))
         {
-            playerRemote?.UpdateState(update.X, update.Y, update.Z, update.Yaw);
+            playerRemote?.UpdateState(update.X, update.Y, update.Z, update.Yaw, update.MoveX, update.MoveZ);
         }
     }
 }

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class RemotePlayer : MonoBehaviour
 {
@@ -7,8 +8,8 @@ public class RemotePlayer : MonoBehaviour
     public int typeCharacter {get; set; }
     
     [SerializeField] private CharacterTypeController _characterTypeController;
-    [SerializeField] private RemoteAnimation _remoteAnimation;
-    public RemoteAnimation RemoteAnimation => _remoteAnimation;
+    [SerializeField] private RemoteCharacterAnimationController characterAnimationCointroller;
+    public RemoteCharacterAnimationController RemoteCharacterAnimationCointroller => characterAnimationCointroller;
     
     
     private Vector3 _targetPosition;
@@ -35,17 +36,16 @@ public class RemotePlayer : MonoBehaviour
         _lastPosition = transform.position;
         _currentPosition = Vector3.Lerp(_currentPosition, _targetPosition, Time.deltaTime * _lerpSpeed);
         transform.position = _currentPosition;
-
-        var speed = (_lastPosition - _currentPosition).magnitude;
-        //_remoteAnimation.SetAnimationState(speed>0.005 ? "Run": "Idle") ;
+        
         // Интерполяция поворота
         _currentRotationY = Mathf.LerpAngle(_currentRotationY, _targetRotationY, Time.deltaTime * _lerpSpeed);
         transform.rotation = Quaternion.Euler(0, _currentRotationY, 0);
     }
 
-    public void UpdateState(float x, float y, float z, float yaw)
+    public void UpdateState(float x, float y, float z, float yaw, float MoveX, float MoveZ)
     {
         _targetPosition = new Vector3(x, y, z);
         _targetRotationY = yaw;
+        //characterAnimationCointroller.SetMoveAnimation(MoveX, MoveZ); ;
     }
 }

@@ -11,6 +11,9 @@ public class Player
     public float Y { get; set; }
     public float Z { get; set; }
     public float Yaw { get; set; } 
+    
+    public float MoveX { get; set; }
+    public float MoveZ { get; set; }
     public int Money { get; set; } = 100; // стартовые деньги
     public string? CurrentOrderId { get; set; } // ID текущего заказа
     public int DeliveriesCompleted { get; set; } = 0;

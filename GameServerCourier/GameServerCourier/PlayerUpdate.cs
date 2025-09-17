@@ -6,6 +6,8 @@ public class PlayerPositionUpdate
     public float Y { get; set; }
     public float Z { get; set; }
     public float Yaw { get; set; }
+    public float MoveX { get; set; }
+    public float MoveZ { get; set; }
 }
 
 public class NewPlayerUpdate
@@ -17,7 +19,9 @@ public class NewPlayerUpdate
     public float Y { get; set; }
     public float Z { get; set; }
     public float Yaw { get; set; }
-    public int TypeCharacter { get; set; } // ← только здесь!
+    public int TypeCharacter { get; set; } 
+    public float MoveX { get; set; }
+    public float MoveZ { get; set; }
 }
 
 [Serializable]

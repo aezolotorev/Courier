@@ -39,7 +39,7 @@ public class NewPlayerMessageHandler : ITcpMessageHandler
                 }
                 playerRemote.SetUpCharacter();
                 _networkManager.RemotePlayers[newPlayer.PlayerId] = playerRemote;
-                playerRemote?.UpdateState(newPlayer.X, newPlayer.Y, newPlayer.Z, newPlayer.Yaw);
+                playerRemote?.UpdateState(newPlayer.X, newPlayer.Y, newPlayer.Z, newPlayer.Yaw, newPlayer.MoveX, newPlayer.MoveZ);  
                 _networkManager.newPlayerConnected?.Invoke(playerRemote?.Username);
             }
         }

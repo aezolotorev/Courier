@@ -6,7 +6,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using Cysharp.Threading.Tasks; // ← добавь
+using Cysharp.Threading.Tasks;
+// ← добавь
 using UnityEngine;
 
 public class NetworkManager : MonoBehaviour
@@ -35,7 +36,9 @@ public class NetworkManager : MonoBehaviour
     private readonly Dictionary<string, RemotePlayer> _remotePlayers = new();
     public Dictionary<string, RemotePlayer> RemotePlayers => _remotePlayers;
     private bool _isInitialized = false;
-     private void Awake()
+    [SerializeField] private CameraManager _cameraManager;
+    
+    private void Awake()
     {
         if (Instance == null)
         {
@@ -104,7 +107,9 @@ public class NetworkManager : MonoBehaviour
                 _ = ListenUdpAsync(_cancellationTokenSource.Token);
 
                 _isInitialized = true;
-                SpawnPlayer(typeCharacter);
+                var player = SpawnPlayer(typeCharacter);
+                _cameraManager.SetTrackingTarget(player.CameraLook);
+                player.SetTrasformFormCameraController(_cameraManager.StickToObject.gameObject);
             
         }
         catch (Exception ex)
@@ -315,43 +320,25 @@ public class NetworkManager : MonoBehaviour
     // Отправка данных
     // ======================
 
-    public async void SendPositionAndRotation(Vector3 position, float yaw)
+    public async void SendMovementUpdate(PlayerPositionUpdate positionUpdate)
     {
         if (string.IsNullOrEmpty(PlayerId) || _udpClient == null || _udpServerEP == null) return;
-
-        var update = new PlayerPositionUpdate()
-        {
-            MessageType = "PlayerUpdate",
-            PlayerId = PlayerId,
-            X = position.x,
-            Y = position.y,
-            Z = position.z,
-            Yaw = yaw
-        };
-
-        string json = JsonConvert.SerializeObject(update);
+       
+        string json = JsonConvert.SerializeObject(positionUpdate);
         byte[] data = Encoding.UTF8.GetBytes(json);
         await _udpClient.SendAsync(data, data.Length, _udpServerEP);
     }
-    
-   
 
-    
 
-    private void SpawnPlayer(int typeCharacter)
+    private PlayerController SpawnPlayer(int typeCharacter)
     {
         var playerPrefab = Resources.Load<PlayerController>("Player");
-        if (playerPrefab != null)
-        {
-            var player = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
-            
-            player.SetCharacterType(typeCharacter);
-            Debug.Log("Игрок создан!");
-        }
-        else
-        {
-            Debug.LogError("Не найден префаб Player в Resources!");
-        }
+
+        var player = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
+
+        player.SetCharacterType(typeCharacter);
+
+        return player;
     }
 
     // ======================

@@ -11,11 +11,11 @@ GameObject:
   - component: {fileID: 972931437317497736}
   - component: {fileID: 5946814374339730035}
   - component: {fileID: 7804477080382530725}
-  - component: {fileID: 7940240858830672620}
   - component: {fileID: 8785034909483380960}
+  - component: {fileID: 4251033715332618052}
   m_Layer: 0
   m_Name: RemotePlayer
-  m_TagString: Untagged
+  m_TagString: Remote
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -49,7 +49,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _characterTypeController: {fileID: 8785034909483380960}
-  _remoteAnimation: {fileID: 7940240858830672620}
+  characterAnimationCointroller: {fileID: 4251033715332618052}
 --- !u!136 &7804477080382530725
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -73,19 +73,6 @@ CapsuleCollider:
   m_Height: 1.8
   m_Direction: 1
   m_Center: {x: 0, y: 0.9, z: 0}
---- !u!114 &7940240858830672620
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5860640442726460739}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2380ca016236405683e6b7fb95fc738d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  animator: {fileID: 8786680330456900080}
 --- !u!114 &8785034909483380960
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -114,6 +101,19 @@ MonoBehaviour:
   - {fileID: 8692616600966345378}
   - {fileID: 8693050358644775914}
   - {fileID: 8692393428997208450}
+--- !u!114 &4251033715332618052
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5860640442726460739}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01db8bae7a874c86bf7c003f770f93fa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _animator: {fileID: 8786680330456900080}
 --- !u!1001 &7730645624696884254
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -10,6 +10,8 @@ public class PlayerPositionUpdate
     public float Y;
     public float Z;
     public float Yaw;
+    public float MoveX; 
+    public float MoveZ;
 }
 
 // Для создания нового игрока
@@ -24,6 +26,8 @@ public class NewPlayerUpdate
     public float Z;
     public float Yaw;
     public int TypeCharacter;
+    public float MoveX; 
+    public float MoveZ;
 }
 
 [Serializable]
